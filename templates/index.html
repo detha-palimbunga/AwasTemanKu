@@ -1,0 +1,955 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Dash</title>
+
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #173b32;
+            --muted: #668078;
+            --green: #1e5b49;
+            --green-dark: #153f34;
+            --mint: #dff4e8;
+            --lime: #d8f36a;
+            --coral: #ff896f;
+            --line: #e4eee8;
+            --shadow: 0 24px 70px #153f3414;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 46px 20px;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(ellipse at 8% 4%, #d8f36a35, transparent 28rem),
+                radial-gradient(ellipse at 94% 12%, #a4e8d333, transparent 30rem),
+                #f3f8f2;
+        }
+
+        .page-shell {
+            width: min(100%, 960px);
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 13px;
+            padding: 7px 12px;
+            border: 1px solid #dceacb;
+            border-radius: 999px;
+            background: #ffffffb8;
+            color: var(--green);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--coral);
+            box-shadow: 0 0 0 4px #ff896f22;
+            content: "";
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(34px, 7vw, 62px);
+            font-weight: 900;
+            letter-spacing: -.065em;
+            line-height: .98;
+        }
+
+        .page-header > p {
+            max-width: 460px;
+            margin: 14px auto 0;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.65;
+        }
+
+        .game {
+            overflow: hidden;
+            padding: clamp(16px, 3vw, 28px);
+            border: 1px solid #ffffff;
+            border-radius: 28px;
+            background: #ffffffed;
+            box-shadow: var(--shadow), 0 2px 8px #153f3408;
+        }
+
+        .game-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .score-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 17px 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: #f8fbf8;
+        }
+
+        .score-icon {
+            display: grid;
+            width: 36px;
+            height: 36px;
+            place-items: center;
+            border-radius: 12px;
+            background: var(--mint);
+            font-size: 18px;
+        }
+
+        .score-label {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        .score-value {
+            display: block;
+            margin-top: 1px;
+            font-size: 23px;
+            font-variant-numeric: tabular-nums;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .topbar-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .topbar-note span {
+            color: var(--green);
+            font-size: 16px;
+        }
+
+        .game-area {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #d6e6dc;
+            border-radius: 22px;
+            background:
+                radial-gradient(ellipse at 80% 15%, #ffffff 0, transparent 40%),
+                linear-gradient(180deg, #eaf5e9, #f8faef);
+            box-shadow: inset 0 1px 0 #ffffff;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 8 / 3;
+        }
+
+        .stage-chip {
+            position: absolute;
+            z-index: 1;
+            top: 14px;
+            left: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 11px;
+            border: 1px solid #ffffff85;
+            border-radius: 999px;
+            background: #173b3275;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+        }
+
+        .stage-chip::before {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--lime);
+            box-shadow: 0 0 10px var(--lime);
+            content: "";
+        }
+
+        .game-over {
+            position: absolute;
+            z-index: 2;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+            background: #12372eaa;
+            backdrop-filter: blur(8px);
+        }
+
+        .game-over[hidden] {
+            display: none;
+        }
+
+        .game-over-card {
+            width: min(100%, 390px);
+            padding: 20px 24px 23px;
+            border: 1px solid #ffffff;
+            border-radius: 24px;
+            background: #fffffff2;
+            box-shadow: 0 24px 70px #08251f55;
+            text-align: center;
+            animation: card-appear .35s ease-out both;
+        }
+
+        @keyframes card-appear {
+            from { opacity: 0; transform: translateY(10px) scale(.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .game-over img {
+            display: block;
+            width: 88px;
+            height: 112px;
+            margin: -4px auto 7px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 10px #173b3222);
+        }
+
+        .game-over h2 {
+            margin: 0 auto 9px;
+            font-size: clamp(20px, 3vw, 25px);
+            letter-spacing: -.035em;
+            line-height: 1.15;
+        }
+
+        .game-over p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .final-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin: 7px 0 2px;
+            padding: 8px 15px;
+            border: 1px solid #e3edbd;
+            border-radius: 999px;
+            background: #f5f9df;
+            color: var(--green-dark);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .final-score strong {
+            font-size: 18px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .control-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 18px;
+            padding: 15px 17px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #f9fbf9;
+        }
+
+        .control-copy {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .hand-icon {
+            display: grid;
+            flex: 0 0 42px;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border-radius: 14px;
+            background: #eff5d9;
+            font-size: 21px;
+        }
+
+        .control-copy strong {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 13px;
+        }
+
+        #cameraStatus {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        button {
+            display: inline-flex;
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            min-height: 46px;
+            padding: 0 19px;
+            border: 0;
+            border-radius: 14px;
+            background: var(--green);
+            box-shadow: 0 5px 12px #1e5b4926, inset 0 1px 0 #ffffff24;
+            color: white;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: var(--green-dark);
+            box-shadow: 0 8px 18px #1e5b4933;
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:focus-visible {
+            outline: 3px solid #8bbd79;
+            outline-offset: 3px;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: .65;
+        }
+
+        .button-icon {
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .privacy-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            margin: 14px 0 0;
+            color: #82958d;
+            font-size: 11px;
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 28px 12px;
+            }
+
+            .page-header {
+                margin-bottom: 19px;
+            }
+
+            .page-header > p {
+                max-width: 320px;
+                font-size: 14px;
+            }
+
+            .game {
+                padding: 13px;
+                border-radius: 23px;
+            }
+
+            .game-topbar {
+                margin-bottom: 11px;
+            }
+
+            .score-card {
+                gap: 9px;
+                padding: 8px 13px 8px 9px;
+            }
+
+            .score-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .score-value {
+                font-size: 20px;
+            }
+
+            .topbar-note {
+                max-width: 132px;
+                font-size: 10px;
+                text-align: right;
+            }
+
+            .game-area {
+                border-radius: 16px;
+            }
+
+            canvas {
+                aspect-ratio: 2.2 / 1;
+            }
+
+            .stage-chip {
+                top: 8px;
+                left: 8px;
+                padding: 6px 8px;
+                font-size: 9px;
+            }
+
+            .control-panel {
+                align-items: stretch;
+                flex-direction: column;
+                gap: 12px;
+                margin-top: 12px;
+                padding: 13px;
+            }
+
+            .control-panel button {
+                width: 100%;
+            }
+
+            .game-over-card {
+                display: grid;
+                grid-template-columns: 58px minmax(0, 1fr);
+                align-items: center;
+                gap: 3px 10px;
+                padding: 9px 12px;
+                border-radius: 19px;
+                text-align: left;
+            }
+
+            .game-over img {
+                grid-row: 1 / 4;
+                width: 58px;
+                height: 70px;
+                margin: 0;
+            }
+
+            .game-over h2 {
+                align-self: end;
+                margin: 0;
+                font-size: 15px;
+            }
+
+            .game-over p {
+                font-size: 11px;
+            }
+
+            .final-score {
+                margin: 1px 0;
+                padding: 4px 8px;
+                font-size: 11px;
+                white-space: nowrap;
+            }
+
+            .game-over-card button {
+                grid-column: 1 / -1;
+                width: 100%;
+                min-height: 36px;
+                margin-top: 2px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .game-over-card {
+                grid-template-columns: 46px minmax(0, 1fr);
+                gap: 4px 8px;
+                padding: 8px 10px;
+            }
+
+            .game-over img {
+                width: 46px;
+                height: 70px;
+            }
+
+            .game-over h2 {
+                font-size: 15px;
+            }
+
+            .game-over p {
+                font-size: 12px;
+            }
+
+            .final-score {
+                margin: 2px 0;
+                padding: 5px 9px;
+                font-size: 12px;
+            }
+
+            .final-score strong {
+                font-size: 15px;
+            }
+
+            .game-over-card button {
+                min-height: 36px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: .01ms !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="page-shell">
+        <header class="page-header">
+            <p class="eyebrow">Tantangan refleks · kontrol kamera</p>
+            <h1>AWAS TEMEN KU</h1>
+            <p>Kendalikan temanmu dengan gerakan tangan. Tunjukkan telapak untuk melompati rintangan dan kejar skor terbaikmu.</p>
+        </header>
+
+        <section class="game" aria-label="Permainan Awas Temen Ku">
+            <div class="game-topbar">
+                <div class="score-card" aria-live="polite">
+                    <span class="score-icon" aria-hidden="true">✦</span>
+                    <span>
+                        <span class="score-label">Skor kamu</span>
+                        <span class="score-value" id="score">0</span>
+                    </span>
+                </div>
+                <div class="topbar-note"><span aria-hidden="true">✋</span> Angkat telapak untuk melompat</div>
+            </div>
+
+            <div class="game-area">
+                <canvas id="canvas" width="800" height="300" aria-label="Area permainan, tunjukkan telapak tangan ke kamera untuk melompat"></canvas>
+                <span class="stage-chip">Arena permainan</span>
+                <div class="game-over" id="gameOver" role="status" aria-live="polite" hidden>
+                    <div class="game-over-card">
+                        <img id="gameOverPhoto" src="{{ url_for('game_image', image_name='ulanggame.png') }}" alt="Foto saat game over">
+                        <h2>Yah, kamu menabrak BEBB!</h2>
+                        <p>Jangan menyerah, coba lagi.</p>
+                        <div class="final-score">Skor akhir <strong id="finalScore">0</strong></div>
+                        <button onclick="startGame()"><span class="button-icon" aria-hidden="true">↻</span> Ulang Lagi</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel">
+                <div class="control-copy">
+                    <span class="hand-icon" aria-hidden="true">🖐️</span>
+                    <div>
+                        <strong>Kontrol dengan kamera</strong>
+                        <p id="cameraStatus" role="status" aria-live="polite">Aktifkan kamera untuk menjadikannya latar permainan, lalu tunjukkan telapak tangan untuk melompat.</p>
+                    </div>
+                </div>
+                <button id="cameraButton" onclick="toggleCamera()"><span class="button-icon" aria-hidden="true">◎</span> Aktifkan Kamera</button>
+                <video id="cameraPreview" autoplay playsinline muted hidden></video>
+            </div>
+
+            <p class="privacy-note"><span aria-hidden="true">🔒</span> Video diproses di perangkat ini dan tidak dikirim ke server.</p>
+        </section>
+    </main>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const scoreText = document.getElementById("score");
+        const gameOverOverlay = document.getElementById("gameOver");
+        const finalScore = document.getElementById("finalScore");
+        const cameraButton = document.getElementById("cameraButton");
+        const cameraPreview = document.getElementById("cameraPreview");
+        const cameraStatus = document.getElementById("cameraStatus");
+
+        const ground = 255;
+        const obstacleSpeed = 2.4;
+        const jumpGravity = 0.4;
+        const visionVersion = "1.1.0";
+
+        let player, obstacles, score, speed, running;
+        const playerPhoto = new Image();
+        playerPhoto.src = "{{ url_for('game_image', image_name='playergame.png') }}";
+        let animationId;
+        let cameraStream;
+        let handLandmarker;
+        let cameraFrameId;
+        let lastDetectionTime = 0;
+        let lastVideoTime = -1;
+        let openPalmFrames = 0;
+        let closedPalmFrames = 0;
+        let palmGestureActive = false;
+
+        function resetGame() {
+            player = {
+                x: 55,
+                y: ground - 120,
+                width: 68,
+                height: 120,
+                velocity: 0,
+                jumping: false
+            };
+
+            obstacles = [];
+            score = 0;
+            speed = obstacleSpeed;
+            running = true;
+            scoreText.textContent = "0";
+            gameOverOverlay.hidden = true;
+        }
+
+        function startGame() {
+            cancelAnimationFrame(animationId);
+            resetGame();
+            draw();
+        }
+
+        function jump() {
+            if (!running) {
+                return;
+            }
+
+            if (!player.jumping) {
+                player.velocity = -10;
+                player.jumping = true;
+            }
+        }
+
+        function isOpenPalm(landmarks) {
+            const extendedFingers = [[8, 6], [12, 10], [16, 14], [20, 18]]
+                .filter(([tip, joint]) => landmarks[tip].y < landmarks[joint].y - 0.025)
+                .length;
+
+            return extendedFingers >= 3;
+        }
+
+        function handlePalmGesture(landmarks) {
+            if (landmarks && isOpenPalm(landmarks)) {
+                openPalmFrames++;
+                closedPalmFrames = 0;
+
+                if (openPalmFrames >= 2 && !palmGestureActive) {
+                    palmGestureActive = true;
+                    jump();
+                    cameraStatus.textContent = running
+                        ? "Telapak terdeteksi! Turunkan lalu tunjukkan lagi untuk melompat kembali."
+                        : "Telapak terdeteksi! Tekan Ulang Lagi untuk mulai bermain.";
+                }
+                return;
+            }
+
+            closedPalmFrames++;
+            openPalmFrames = 0;
+            if (closedPalmFrames >= 2) {
+                palmGestureActive = false;
+                cameraStatus.textContent = "Kamera aktif sebagai latar — tunjukkan telapak tangan untuk melompat.";
+            }
+        }
+
+        async function toggleCamera() {
+            if (cameraStream) {
+                stopCamera();
+                cameraStatus.textContent = "Kontrol kamera dimatikan.";
+                return;
+            }
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                cameraStatus.textContent = "Browser tidak mendukung kamera. Gunakan localhost atau HTTPS.";
+                return;
+            }
+
+            cameraButton.disabled = true;
+            cameraStatus.textContent = "Meminta izin kamera dan memuat deteksi telapak tangan...";
+
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+                });
+                cameraStream.getTracks().forEach(track => {
+                    track.addEventListener("ended", function() {
+                        if (cameraStream) {
+                            stopCamera();
+                            cameraStatus.textContent = "Kamera terputus. Aktifkan kembali untuk melanjutkan.";
+                        }
+                    }, { once: true });
+                });
+                cameraPreview.srcObject = cameraStream;
+                await cameraPreview.play();
+                if (!running) {
+                    animationId = requestAnimationFrame(draw);
+                }
+
+                if (!handLandmarker) {
+                    const visionModule = await import(
+                        `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${visionVersion}/vision_bundle.mjs`
+                    );
+                    const fileset = await visionModule.FilesetResolver.forVisionTasks(
+                        `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${visionVersion}/wasm`
+                    );
+                    const modelOptions = {
+                        baseOptions: {
+                            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+                        },
+                        runningMode: "VIDEO",
+                        numHands: 1
+                    };
+
+                    try {
+                        handLandmarker = await visionModule.HandLandmarker.createFromOptions(
+                            fileset,
+                            { ...modelOptions, baseOptions: { ...modelOptions.baseOptions, delegate: "GPU" } }
+                        );
+                    } catch (gpuError) {
+                        console.warn("Deteksi tangan GPU tidak tersedia; mencoba CPU.", gpuError);
+                        handLandmarker = await visionModule.HandLandmarker.createFromOptions(
+                            fileset,
+                            { ...modelOptions, baseOptions: { ...modelOptions.baseOptions, delegate: "CPU" } }
+                        );
+                    }
+                }
+
+                openPalmFrames = 0;
+                closedPalmFrames = 0;
+                palmGestureActive = false;
+                lastVideoTime = -1;
+                cameraButton.textContent = "Matikan Kamera";
+                cameraStatus.textContent = "Kamera aktif sebagai latar — tunjukkan telapak tangan untuk melompat.";
+                processCameraFrame();
+            } catch (error) {
+                console.error("Kamera atau deteksi telapak tangan gagal dimulai.", error);
+                stopCamera();
+                if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+                    cameraStatus.textContent = "Izin kamera ditolak. Izinkan akses kamera di browser lalu coba lagi.";
+                } else {
+                    cameraStatus.textContent = "Kamera atau model gagal dimuat. Periksa koneksi internet dan izin kamera, lalu coba lagi.";
+                }
+            } finally {
+                cameraButton.disabled = false;
+            }
+        }
+
+        function processCameraFrame() {
+            if (!cameraStream || !handLandmarker) {
+                return;
+            }
+
+            const now = performance.now();
+            if (
+                cameraPreview.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+                cameraPreview.currentTime !== lastVideoTime &&
+                now - lastDetectionTime >= 100
+            ) {
+                try {
+                    const result = handLandmarker.detectForVideo(cameraPreview, now);
+                    lastVideoTime = cameraPreview.currentTime;
+                    lastDetectionTime = now;
+                    handlePalmGesture(result.landmarks && result.landmarks[0]);
+                } catch (error) {
+                    console.error("Deteksi telapak tangan terhenti.", error);
+                    stopCamera();
+                    cameraStatus.textContent = "Deteksi telapak tangan terhenti. Aktifkan kembali kamera untuk mencoba lagi.";
+                    return;
+                }
+            }
+
+            cameraFrameId = requestAnimationFrame(processCameraFrame);
+        }
+
+        function stopCamera() {
+            cancelAnimationFrame(cameraFrameId);
+            cameraFrameId = undefined;
+
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = undefined;
+            }
+
+            cameraPreview.srcObject = null;
+            cameraPreview.hidden = true;
+            cameraButton.textContent = "Aktifkan Kamera";
+            openPalmFrames = 0;
+            closedPalmFrames = 0;
+            palmGestureActive = false;
+
+            if (handLandmarker) {
+                handLandmarker.close();
+                handLandmarker = undefined;
+            }
+        }
+
+        function drawPlayer() {
+            if (playerPhoto.complete && playerPhoto.naturalWidth > 0) {
+                ctx.drawImage(playerPhoto, player.x, player.y, player.width, player.height);
+            } else {
+                ctx.fillStyle = "#dce9d5";
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
+        }
+
+        function drawObstacle(obstacle) {
+            ctx.fillStyle = "#e27d56";
+            ctx.fillRect(
+                obstacle.x,
+                obstacle.y,
+                obstacle.width,
+                obstacle.height
+            );
+
+            ctx.fillRect(
+                obstacle.x - 7,
+                obstacle.y + 13,
+                8,
+                7
+            );
+        }
+
+        function drawBackground() {
+            if (
+                cameraStream &&
+                cameraPreview.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+            ) {
+                const sourceWidth = cameraPreview.videoWidth;
+                const sourceHeight = cameraPreview.videoHeight;
+                const scale = Math.max(
+                    canvas.width / sourceWidth,
+                    canvas.height / sourceHeight
+                );
+                const cropWidth = canvas.width / scale;
+                const cropHeight = canvas.height / scale;
+                const cropX = (sourceWidth - cropWidth) / 2;
+                const cropY = (sourceHeight - cropHeight) / 2;
+
+                ctx.save();
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(
+                    cameraPreview,
+                    cropX,
+                    cropY,
+                    cropWidth,
+                    cropHeight,
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                );
+                ctx.restore();
+                ctx.fillStyle = "rgba(251, 253, 247, 0.35)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = "#fbfdf7";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+
+            // Garis tanah
+            ctx.strokeStyle = "#a8c49b";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, ground);
+            ctx.lineTo(canvas.width, ground);
+            ctx.stroke();
+
+            if (running) {
+                // Gerakan lompat
+                player.velocity += jumpGravity;
+                player.y += player.velocity;
+
+                if (player.y >= ground - player.height) {
+                    player.y = ground - player.height;
+                    player.velocity = 0;
+                    player.jumping = false;
+                }
+
+                // Membuat rintangan
+                if (
+                    obstacles.length === 0 ||
+                    obstacles[obstacles.length - 1].x
+                        < canvas.width - 280 - Math.random() * 100
+                ) {
+                    obstacles.push({
+                        x: canvas.width,
+                        y: ground - 35,
+                        width: 22,
+                        height: 35
+                    });
+                }
+
+                // Menggerakkan rintangan
+                let collided = false;
+                obstacles.forEach(obstacle => {
+                    obstacle.x -= speed;
+                    drawObstacle(obstacle);
+
+                    // Deteksi tabrakan
+                    if (
+                        player.x + player.width - 12 > obstacle.x &&
+                        player.x + 12 < obstacle.x + obstacle.width &&
+                        player.y + player.height - 8 > obstacle.y
+                    ) {
+                        collided = true;
+                    }
+                });
+
+                obstacles = obstacles.filter(
+                    obstacle => obstacle.x + obstacle.width > 0
+                );
+
+                score++;
+                scoreText.textContent = Math.floor(score / 5);
+
+                drawPlayer();
+
+                if (collided) {
+                    running = false;
+                    finalScore.textContent = scoreText.textContent;
+                    gameOverOverlay.hidden = false;
+                }
+            } else {
+                obstacles.forEach(drawObstacle);
+                drawPlayer();
+            }
+
+            if (running || cameraStream) {
+                animationId = requestAnimationFrame(draw);
+            }
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
+ 
