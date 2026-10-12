@@ -555,7 +555,7 @@
                 <span class="stage-chip">Arena permainan</span>
                 <div class="game-over" id="gameOver" role="status" aria-live="polite" hidden>
                     <div class="game-over-card">
-                        <img id="gameOverPhoto" src="{{ url_for('game_image', image_name='ulanggame.png') }}" alt="Foto saat game over">
+                        <img id="gameOverPhoto" src="./templates/ulanggame.png" alt="Foto saat game over">
                         <h2>Yah, kamu menabrak BEBB!</h2>
                         <p>Jangan menyerah, coba lagi.</p>
                         <div class="final-score">Skor akhir <strong id="finalScore">0</strong></div>
@@ -597,7 +597,7 @@
 
         let player, obstacles, score, speed, running;
         const playerPhoto = new Image();
-        playerPhoto.src = "{{ url_for('game_image', image_name='playergame.png') }}";
+        playerPhoto.src = "./templates/playergame.png";
         let animationId;
         let cameraStream;
         let handLandmarker;
